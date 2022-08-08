@@ -5,7 +5,11 @@ import "dotenv/config"
 
 const config: HardhatUserConfig = {
   solidity: {
-    compilers: [{ version: "0.8.9" }, { version: "0.4.19" }],
+    compilers: [
+      { version: "0.8.9" },
+      { version: "0.4.19" },
+      { version: "0.6.12" },
+    ],
   },
   networks: {
     hardhat: {
