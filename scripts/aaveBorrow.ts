@@ -20,6 +20,15 @@ const main = async () => {
   // deposit
   await lendingPool.deposit(wethAddress, amount, deployer.address, 0)
   console.log("Deposit")
+
+  // get data before calculate borrow
+  const { availableBorrowsETH, totalDebtETH } = await getBorrowData(
+    deployer.address,
+    lendingPool
+  )
+  const daiPriceAddress = "0x773616E4d11A78F511299002da57A0a94577F1f4"
+  // get price before borrow
+  const daiPrice = await getPriceData(daiPriceAddress)
 }
 
 const getLendingPool = async () => {
@@ -52,6 +61,41 @@ const approveErc20 = async (
 
   const tx = await erc20.approve(spender, amount)
   await tx.wait()
+}
+
+const getBorrowData = async (
+  userAddress: string,
+  lendingPool: ILendingPool
+) => {
+  const {
+    totalCollateralETH,
+    totalDebtETH,
+    availableBorrowsETH,
+    currentLiquidationThreshold,
+    ltv,
+    healthFactor,
+  } = await lendingPool.getUserAccountData(userAddress)
+  console.log(`
+    Total Collateral in ETH ${ethers.utils.formatEther(totalCollateralETH)}
+    Total Debt in ETH ${ethers.utils.formatEther(totalCollateralETH)}
+    Avaliable to borrow in ETH ${ethers.utils.formatEther(availableBorrowsETH)}
+    Liquidation Threshold ${currentLiquidationThreshold}
+    ltv ${ltv}
+    Health Factor ${ethers.utils.formatEther(healthFactor)}
+  `)
+
+  return { totalDebtETH, availableBorrowsETH, currentLiquidationThreshold }
+}
+
+const getPriceData = async (priceAddress: string) => {
+  const priceFeed = await ethers.getContractAt("IAggregatorV3", priceAddress)
+  const [, answer] = await priceFeed.latestRoundData()
+  const decimals = await priceFeed.decimals()
+  console.log(answer.toString())
+  console.log(
+    `DAI/ETH price is ${ethers.utils.formatUnits(answer.toString(), decimals)}`
+  )
+  return answer
 }
 
 main()

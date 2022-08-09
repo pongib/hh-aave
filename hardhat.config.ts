@@ -15,6 +15,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: process.env.FORK_URL!,
+        blockNumber: 15306831,
       },
     },
   },
