@@ -1,5 +1,5 @@
 import { BigNumberish, Signer } from "ethers"
-import { ethers } from "hardhat"
+import { ethers, getNamedAccounts } from "hardhat"
 import {
   IERC20,
   ILendingPool,
@@ -29,6 +29,32 @@ const main = async () => {
   const daiPriceAddress = "0x773616E4d11A78F511299002da57A0a94577F1f4"
   // get price before borrow
   const daiPrice = await getPriceData(daiPriceAddress)
+
+  // amount to borrow
+  const amountDaiToBorrow = availableBorrowsETH.div(daiPrice).mul(8).div(10) // *0.8 for not in risk
+  const amountDaiToBorrowInWei = ethers.utils.parseUnits(
+    amountDaiToBorrow.toString(),
+    18 // same as parseEther
+  )
+  // borrow
+  const daiAddress = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+  await borrowAssest(
+    daiAddress,
+    lendingPool,
+    amountDaiToBorrowInWei,
+    deployer.address
+  )
+
+  await getBorrowData(deployer.address, lendingPool)
+}
+
+const borrowAssest = async (
+  assetAddress: string,
+  lendingPool: ILendingPool,
+  amount: BigNumberish,
+  account: string
+) => {
+  await lendingPool.borrow(assetAddress, amount, 1, 0, account)
 }
 
 const getLendingPool = async () => {
@@ -77,7 +103,7 @@ const getBorrowData = async (
   } = await lendingPool.getUserAccountData(userAddress)
   console.log(`
     Total Collateral in ETH ${ethers.utils.formatEther(totalCollateralETH)}
-    Total Debt in ETH ${ethers.utils.formatEther(totalCollateralETH)}
+    Total Debt in ETH ${ethers.utils.formatEther(totalDebtETH)}
     Avaliable to borrow in ETH ${ethers.utils.formatEther(availableBorrowsETH)}
     Liquidation Threshold ${currentLiquidationThreshold}
     ltv ${ltv}
@@ -91,6 +117,7 @@ const getPriceData = async (priceAddress: string) => {
   const priceFeed = await ethers.getContractAt("IAggregatorV3", priceAddress)
   const [, answer] = await priceFeed.latestRoundData()
   const decimals = await priceFeed.decimals()
+  console.log("decimals", decimals)
   console.log(answer.toString())
   console.log(
     `DAI/ETH price is ${ethers.utils.formatUnits(answer.toString(), decimals)}`
