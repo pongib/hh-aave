@@ -12,10 +12,14 @@ const main = async () => {
   await getWeth()
   const lendingPool = await getLendingPool()
   console.log(lendingPool.address)
+
   // approve before deposit to contract
   await approveErc20(wethAddress, lendingPool.address, amount, deployer)
+  console.log("Approve")
+
   // deposit
-  await lendingPool.deposit()
+  await lendingPool.deposit(wethAddress, amount, deployer.address, 0)
+  console.log("Deposit")
 }
 
 const getLendingPool = async () => {

@@ -10,7 +10,6 @@ const getWeth = async () => {
   const weth: IWeth = await ethers.getContractAt("IWeth", wethAddress)
   const tx = await weth.deposit({ value: amount })
   const txReceipt = await tx.wait()
-  console.log("txReceipt", txReceipt)
   const balaceOfWeth = await weth.balanceOf(deployer.address)
   console.log("balance weth", ethers.utils.formatEther(balaceOfWeth))
 }
