@@ -38,23 +38,37 @@ const main = async () => {
   )
   // borrow
   const daiAddress = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
-  await borrowAssest(
-    daiAddress,
-    lendingPool,
-    amountDaiToBorrowInWei,
-    deployer.address
-  )
+  await borrowAssest(daiAddress, lendingPool, amountDaiToBorrowInWei, deployer)
 
   await getBorrowData(deployer.address, lendingPool)
+
+  await repayDebt(daiAddress, lendingPool, amountDaiToBorrowInWei, deployer)
+  await getBorrowData(deployer.address, lendingPool)
+}
+
+const repayDebt = async (
+  assetAddress: string,
+  lendingPool: ILendingPool,
+  amount: BigNumberish,
+  account: Signer
+) => {
+  // approve dai first
+  await approveErc20(
+    assetAddress,
+    lendingPool.address,
+    ethers.constants.MaxUint256,
+    account
+  )
+  await lendingPool.repay(assetAddress, amount, 1, account.getAddress())
 }
 
 const borrowAssest = async (
   assetAddress: string,
   lendingPool: ILendingPool,
   amount: BigNumberish,
-  account: string
+  account: Signer
 ) => {
-  await lendingPool.borrow(assetAddress, amount, 1, 0, account)
+  await lendingPool.borrow(assetAddress, amount, 1, 0, account.getAddress())
 }
 
 const getLendingPool = async () => {
